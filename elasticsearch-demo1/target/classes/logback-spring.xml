@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--详细介绍使用：https://icode.blog.csdn.net/article/details/88874162-->
+<!-- debug="true" : 打印 logback 内部状态（默认当 logback 运行出错时才会打印内部状态 ）, 配置该属性后打印条件如下（同时满足）：
+    1、找到配置文件
+    2、配置文件是一个格式正确的xml文件 也可编程实现打印内部状态, 例如：
+    LoggerContext lc = (LoggerContext)
+    LoggerFactory.getILoggerFactory(); StatusPrinter.print(lc);
+-->
+<!-- scan="true" ： 自动扫描该配置文件，若有修改则重新加载该配置文件 -->
+<!-- scanPeriod="30 seconds" : 配置自动扫面时间间隔（单位可以是：milliseconds, seconds, minutes or hours，默认为：milliseconds）， 默认为1分钟，scan="true"时该配置才会生效 -->
+<!--<configuration debug="true" scan="true" scanPeriod="30 seconds" packagingData="true">-->
+<configuration scanPeriod="1 seconds">
+
+    <!-- 彩色日志(IDE下载插件才可以生效) -->
+    <!-- 彩色日志 -->
+    <!-- 彩色日志依赖的渲染类 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+
+    <!-- 彩色日志格式 -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%level) %clr(${PID}){magenta} %clr([%thread]){blue} %clr(%logger){cyan} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+    <!-- 控制台日志 -->
+    <appender name="StdoutAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <withJansi>true</withJansi>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- 输出mybatis的sql语句,没有这句就无法输出mybatis的sql语句 -->
+    <logger name="com.xh" level="INFO"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="StdoutAppender"/>
+    </root>
+
+    <root level="INFO">
+        <appender-ref ref="StdoutAppender"/>
+    </root>
+</configuration>
