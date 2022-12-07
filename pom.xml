@@ -11,6 +11,7 @@
     <modules>
        <!-- <module>elasticsearch-demo</module>-->
         <module>elasticsearch-demo1</module>
+        <module>elasticsearch-demo2</module>
     </modules>
 
     <properties>
