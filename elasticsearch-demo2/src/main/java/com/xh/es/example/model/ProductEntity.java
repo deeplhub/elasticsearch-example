@@ -20,8 +20,16 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @Document(indexName = "product")
 public class ProductEntity {
 
+    //必须有 id,这里的 id 是全局唯一的标识，等同于 es 中的"_id"
     @Id
-    private Long id;
+    private Long id;//商品唯一标识
+
+    /**
+     * type : 字段数据类型
+     * analyzer : 分词器类型
+     * index : 是否索引(默认:true)
+     * Keyword : 短语,不进行分词
+     */
     @Field(type = FieldType.Text, analyzer = "ik_max_word")
     private String titel;
     @Field(type = FieldType.Keyword)
