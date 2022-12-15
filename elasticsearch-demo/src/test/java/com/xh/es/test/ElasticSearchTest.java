@@ -239,40 +239,40 @@ public class ElasticSearchTest {
         log.info("本次分页结果,size:{},page:{}", page.getContent().size(), page);
     }
 
-//    /**
-//     * SearchAfter ->
-//     * 该方法只建议用于滚动的场景,不可以指定跳转页数
-//     * 例如app的下翻,只能回到顶部那种,回到顶部不要传 Object[] values,就会直接默认查询从 page=0 ~ limit,
-//     * 该方法只能指定page=0(es 默认page=0，limit=10),所以你传page也没用,我不会设置该参数,
-//     * 如果想要实现首页的跳转,那么你可以你自己实现传输page试试! 我没试过!
-//     * <p>
-//     * 用例解析: 也就是我为什么要怎么写?
-//     * <p>
-//     * RequestSearchAfterPage.of(10, "name.keyword", SortOrder.ASC,null)
-//     * // 当 values 为null时,表示你是要进行首页查询(page=0,limit)
-//     * <p>
-//     * while (!CollectionUtils.isEmpty(page.getContent()));
-//     * // 表示下一页内容是否没有了,也就是页面上的到底了,一滴都没有了,大兄弟,没有了
-//     * <p>
-//     * elasticsearchService.getPageByCondition(DemoEsVo.class, "demo", esSearchDto, requestSearchAfterPage);
-//     * // 为什么我的文档类是 {@link DemoEsDTO} 用的却是 {@link DemoEsVo},这是因为SearchAfter的特殊性,当你要查询下一页时
-//     * 你必须的有上页某个文档的sort属性( 也就是这里的{@link DemoEsVo} -> values ),你得把它返回给用户,在他要往下翻页的时候
-//     * 再传回来入参 {@link com.blacktea.es.service.strategy.SearchAfterPageStrategyImpl}
-//     * 里的 -> {searchSourceBuilder.searchAfter(values);}
-//     * 作为 search_after 的入参
-//     */
-//    @Test
-//    public void getSearchAfterPage() throws IOException {
-//        ElasticSearchSearchDTO esSearchDto = this.getSearchDto();
-//        RequestSearchAfterPage requestSearchAfterPage = RequestSearchAfterPage.of(10, "name.keyword", SortOrder.ASC, null);
-//        Page<DemoEsVo> page = elasticSearchService.getPageByCondition(DemoEsVo.class, "demo", esSearchDto, requestSearchAfterPage);
-//        do {
-//            log.info("本次分页结果,size:{},page:{}", page.getContent().size(), JSON.toJSONString(page));
-//            Object[] sort = page.getContent().get(page.getContent().size() - 1).getSort();
-//            requestSearchAfterPage.setValues(sort);
-//            page = elasticsearchService.getPageByCondition(DemoEsVo.class, "demo", esSearchDto, requestSearchAfterPage);
-//        } while (!CollectionUtils.isEmpty(page.getContent()));
-//    }
+    /**
+     * SearchAfter ->
+     * 该方法只建议用于滚动的场景,不可以指定跳转页数
+     * 例如app的下翻,只能回到顶部那种,回到顶部不要传 Object[] values,就会直接默认查询从 page=0 ~ limit,
+     * 该方法只能指定page=0(es 默认page=0，limit=10),所以你传page也没用,我不会设置该参数,
+     * 如果想要实现首页的跳转,那么你可以你自己实现传输page试试! 我没试过!
+     * <p>
+     * 用例解析: 也就是我为什么要怎么写?
+     * <p>
+     * RequestSearchAfterPage.of(10, "name.keyword", SortOrder.ASC,null)
+     * // 当 values 为null时,表示你是要进行首页查询(page=0,limit)
+     * <p>
+     * while (!CollectionUtils.isEmpty(page.getContent()));
+     * // 表示下一页内容是否没有了,也就是页面上的到底了,一滴都没有了,大兄弟,没有了
+     * <p>
+     * elasticsearchService.getPageByCondition(DemoEsVo.class, "demo", esSearchDto, requestSearchAfterPage);
+     * // 为什么我的文档类是 {@link DemoEsDTO} 用的却是 {@link DemoEsVo},这是因为SearchAfter的特殊性,当你要查询下一页时
+     * 你必须的有上页某个文档的sort属性( 也就是这里的{@link DemoEsVo} -> values ),你得把它返回给用户,在他要往下翻页的时候
+     * 再传回来入参 {@link com.blacktea.es.service.strategy.SearchAfterPageStrategyImpl}
+     * 里的 -> {searchSourceBuilder.searchAfter(values);}
+     * 作为 search_after 的入参
+     */
+    @Test
+    public void getSearchAfterPage() throws IOException {
+        ElasticSearchSearchDTO esSearchDto = this.getSearchDto();
+        RequestSearchAfterPage requestSearchAfterPage = RequestSearchAfterPage.of(10, "name.keyword", SortOrder.ASC, null);
+        Page<DemoEsVo> page = elasticSearchService.getPageByCondition(DemoEsVo.class, "demo", esSearchDto, requestSearchAfterPage);
+        do {
+            log.info("本次分页结果,size:{},page:{}", page.getContent().size(), JSON.toJSONString(page));
+            Object[] sort = page.getContent().get(page.getContent().size() - 1).getSort();
+            requestSearchAfterPage.setValues(sort);
+            page = elasticsearchService.getPageByCondition(DemoEsVo.class, "demo", esSearchDto, requestSearchAfterPage);
+        } while (!CollectionUtils.isEmpty(page.getContent()));
+    }
 
 
     private UserEntity getUser() {

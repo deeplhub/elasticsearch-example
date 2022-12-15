@@ -167,14 +167,14 @@ public class ElasticSearchDocTest {
     public void createBatchDoc() throws IOException {
         BulkRequest request = new BulkRequest();
 
-        request.add(new IndexRequest().index("user").id("1001").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z1").age(30).sex("男").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1002").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z2").age(20).sex("男").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1003").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z3").age(21).sex("女").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1004").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z4").age(23).sex("女").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1005").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z5").age(22).sex("男").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1006").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z6").age(12).sex("女").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1007").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z7").age(30).sex("男").build()), XContentType.JSON));
-        request.add(new IndexRequest().index("user").id("1008").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z8").age(43).sex("女").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1001").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z1").age(30).sex("男").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1002").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z2").age(20).sex("男").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1003").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z3").age(21).sex("女").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1004").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z4").age(23).sex("女").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1005").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z5").age(22).sex("男").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1006").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z6").age(12).sex("女").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1007").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z7").age(30).sex("男").build()), XContentType.JSON));
+        request.add(new IndexRequest().index("user1").id("1008").source(JSONUtil.toJsonStr(UserEntity.builder().name("Z8").age(43).sex("女").build()), XContentType.JSON));
 
 
         BulkResponse response = restClient.bulk(request, RequestOptions.DEFAULT);
@@ -441,6 +441,7 @@ public class ElasticSearchDocTest {
         SearchRequest request = new SearchRequest();
 
         request.indices("user");
+        // fuzzy query用法和match基本一致，参数也包含fuzziness、prefix_length、max_expansions、transpositions，唯一的不同点是Fuzzy query的查询不分词。
         request.source(new SearchSourceBuilder().query(QueryBuilders.fuzzyQuery("name.keyword", "Z").fuzziness(Fuzziness.ONE)));
 
         SearchResponse response = restClient.search(request, RequestOptions.DEFAULT);
@@ -499,7 +500,7 @@ public class ElasticSearchDocTest {
 
         request.indices("user");
 //        request.source(new SearchSourceBuilder().aggregation(AggregationBuilders.max("maxAge").field("age")) );
-        request.source(new SearchSourceBuilder().aggregation(AggregationBuilders.terms("ageGroup").field("age")) );
+        request.source(new SearchSourceBuilder().aggregation(AggregationBuilders.terms("ageGroup").field("age")));
 
         SearchResponse response = restClient.search(request, RequestOptions.DEFAULT);
 
@@ -512,5 +513,38 @@ public class ElasticSearchDocTest {
         for (SearchHit hit : hits) {
             log.info("打印数据：{}", hit.getSourceAsString());
         }
+    }
+
+
+    /**
+     * 多条件查询
+     *
+     * @throws IOException
+     */
+    @Test
+    public void demo() throws IOException {
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+        // set = '女' and age >=30 and age <= 50
+        boolQueryBuilder.filter(QueryBuilders.termQuery("sex", "女"));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("age").gte(30).lte(50));
+
+        SearchRequest request = new SearchRequest();
+
+        request.indices("user1");
+        request.source(new SearchSourceBuilder().query(boolQueryBuilder));
+
+        SearchResponse response = restClient.search(request, RequestOptions.DEFAULT);
+
+        // 获取匹配的数据
+        SearchHits hits = response.getHits();
+
+        log.info("获取总共条数：{}", hits.getTotalHits());
+        log.info("查询时间：{}", response.getTook());
+
+        for (SearchHit hit : hits) {
+            log.info("打印数据：{}", hit.getSourceAsString());
+        }
+
     }
 }

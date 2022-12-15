@@ -22,6 +22,7 @@ public class ElasticSearchRestClientConfig extends AbstractElasticsearchConfigur
     private String username;
     private String password;
 
+    @Bean
     @Override
     public RestHighLevelClient elasticsearchClient() {
         final ClientConfiguration clientConfiguration = ClientConfiguration.builder()

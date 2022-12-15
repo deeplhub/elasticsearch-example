@@ -9,10 +9,10 @@
         <outputRelativeToContentRoot value="true" />
         <module name="elasticsearch-demo2" />
         <module name="elasticsearch-demo1" />
+        <module name="elasticsearch-demo" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="elasticsearch-demo" target="1.8" />
       <module name="es-demo1" target="1.8" />
     </bytecodeTargetLevel>
   </component>

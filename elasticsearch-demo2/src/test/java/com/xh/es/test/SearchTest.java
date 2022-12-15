@@ -3,13 +3,21 @@ package com.xh.es.test;
 import com.xh.es.example.model.ProductEntity;
 import com.xh.es.example.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
@@ -25,6 +33,8 @@ public class SearchTest {
 
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
 
     /**
      * term 查询
@@ -54,5 +64,19 @@ public class SearchTest {
             System.out.println(product);
         }
     }
+
+    @Test
+    public void demo() {
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+//        构建查询
+        NativeSearchQuery build = new NativeSearchQueryBuilder()
+                .withQuery(QueryBuilders.termQuery("category", "小米"))
+                .withQuery(QueryBuilders.rangeQuery("price").lte(2000))
+                .build();
+
+
+    }
+
 
 }

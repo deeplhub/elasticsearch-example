@@ -324,6 +324,35 @@ public class ElasticSearchServiceImpl<T> implements ElasticSearchService<T> {
         }
     }
 
+    /**
+     * 获取list, 通过接口 {@link com.xh.es.service.strategy.ElasticSearchRequestPageStrategy} 实现的策略来获取
+     *
+     * @param var1          返回的实体
+     * @param pageRequest   分页请求对象
+     * @param searchRequest 搜索请求对象
+     * @return List<T>
+     * @throws IOException 异常
+     */
+    private List<T> list(Class<T> var1, PageRequest pageRequest, SearchRequest searchRequest) throws IOException {
+        List<T> list = new ArrayList<>();
+        if (null == pageRequest) {
+            throw new RuntimeException("ES查询分页时,分页对象不可以为空!");
+        }
+
+        if (pageRequest instanceof RequestFromSizePage) {
+            // 查询指定分页
+            list = new RequestPageContext<>(fromSizePageStrategy).list(var1, searchRequest, pageRequest);
+        } else if (pageRequest instanceof RequestScrollPage) {
+            // 查询全部数据
+            list = new RequestPageContext<>(scrollPageStrategy).list(var1, searchRequest, pageRequest);
+        } else if (pageRequest instanceof RequestSearchAfterPage) {
+            // 一页一页查询
+            list = new RequestPageContext<>(searchAfterPageStrategy).list(var1, searchRequest, pageRequest);
+        }
+        return list;
+
+    }
+
     @Override
     @ExecutionMethod(name = "es-根据条件分页查询(page)")
     public Page<T> getPageByCondition(Class<T> var1, String index, ElasticSearchSearchDTO esSearchDto, PageRequest pageRequest) throws IOException {
@@ -359,32 +388,5 @@ public class ElasticSearchServiceImpl<T> implements ElasticSearchService<T> {
         return count;
     }
 
-    /**
-     * 获取list, 通过接口 {@link com.xh.es.service.strategy.ElasticSearchRequestPageStrategy} 实现的策略来获取
-     *
-     * @param var1          返回的实体
-     * @param pageRequest   分页请求对象
-     * @param searchRequest 搜索请求对象
-     * @return List<T>
-     * @throws IOException 异常
-     */
-    private List<T> list(Class<T> var1, PageRequest pageRequest, SearchRequest searchRequest) throws IOException {
-        List<T> list = new ArrayList<>();
-        if (null == pageRequest) {
-            throw new RuntimeException("ES查询分页时,分页对象不可以为空!");
-        }
 
-        if (pageRequest instanceof RequestFromSizePage) {
-            // 查询指定分页
-            list = new RequestPageContext<>(fromSizePageStrategy).list(var1, searchRequest, pageRequest);
-        } else if (pageRequest instanceof RequestScrollPage) {
-            // 查询全部数据
-            list = new RequestPageContext<>(scrollPageStrategy).list(var1, searchRequest, pageRequest);
-        } else if (pageRequest instanceof RequestSearchAfterPage) {
-            // 一页一页查询
-            list = new RequestPageContext<>(searchAfterPageStrategy).list(var1, searchRequest, pageRequest);
-        }
-        return list;
-
-    }
 }
