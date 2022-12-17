@@ -1,5 +1,6 @@
 package com.xh.es.test;
 
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.json.JSONUtil;
 import com.xh.es.model.UserEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -19,20 +19,15 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.CreateIndexResponse;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.core.Nullable;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -46,8 +41,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * ES 文档
@@ -339,7 +339,6 @@ public class ElasticSearchDocTest {
     public void filterQuery() throws IOException {
         SearchSourceBuilder builder = new SearchSourceBuilder().query(QueryBuilders.matchAllQuery());
 
-
         String[] includes = {}, // 包含
                 excludes = {"name"};// 排除
         builder.fetchSource(includes, excludes);
@@ -516,35 +515,177 @@ public class ElasticSearchDocTest {
     }
 
 
-    /**
-     * 多条件查询
-     *
-     * @throws IOException
-     */
-    @Test
-    public void demo() throws IOException {
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-        // set = '女' and age >=30 and age <= 50
-        boolQueryBuilder.filter(QueryBuilders.termQuery("sex", "女"));
-        boolQueryBuilder.filter(QueryBuilders.rangeQuery("age").gte(30).lte(50));
-
-        SearchRequest request = new SearchRequest();
-
-        request.indices("user1");
-        request.source(new SearchSourceBuilder().query(boolQueryBuilder));
-
-        SearchResponse response = restClient.search(request, RequestOptions.DEFAULT);
-
-        // 获取匹配的数据
-        SearchHits hits = response.getHits();
-
-        log.info("获取总共条数：{}", hits.getTotalHits());
-        log.info("查询时间：{}", response.getTook());
-
-        for (SearchHit hit : hits) {
-            log.info("打印数据：{}", hit.getSourceAsString());
-        }
-
-    }
+//    /**
+//     * 多条件查询
+//     *
+//     * @throws IOException
+//     */
+//    @Test
+//    public void demo() throws IOException {
+//        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+//
+//        //  and
+////        boolQueryBuilder.must(QueryBuilders.matchQuery("age", 23));
+////        boolQueryBuilder.must(QueryBuilders.matchQuery("sex", "女"));
+////        boolQueryBuilder.mustNot(QueryBuilders.matchQuery("sex", "女"));
+//        // or
+////        boolQueryBuilder.should(QueryBuilders.matchQuery("age", 23));
+////        boolQueryBuilder.should(QueryBuilders.matchQuery("age", 30));
+//
+//        // set = '女' and age >=30 and age <= 50
+////        boolQueryBuilder.must(QueryBuilders.termQuery("sex", "女"));
+////        boolQueryBuilder.must(QueryBuilders.rangeQuery("age").gte(30).lte(50));
+//
+//
+//        SearchRequest request = new SearchRequest("user1");
+////        request.source(new SearchSourceBuilder().query(boolQueryBuilder));
+//
+////        SearchSourceBuilder searchSourceBuilder = this.doTermQueryLogic(new SearchSourceBuilder(), boolQueryBuilder, "age", 23, ElasticSearchConditionEnum.AND, null);
+////        searchSourceBuilder = this.doTermQueryLogic(searchSourceBuilder, boolQueryBuilder, "sex", "男", ElasticSearchConditionEnum.OR, null);
+//
+//        List<Map<String, Object>> list = new ArrayList<>();
+//        Map<String, Object> map = new HashMap<>();
+//
+////        map.put("k", "age");
+////        map.put("v", 23);
+////        map.put("enum", ElasticSearchConditionEnum.AND);
+////        list.add(map);
+////
+////        map = new HashMap<>();
+////        map.put("k", "name.keyword");
+////        map.put("v", "Z4");
+////        map.put("enum", ElasticSearchConditionEnum.AND);
+////        list.add(map);
+//
+//        map = new HashMap<>();
+//
+////        map.put("k", "sex");
+////        map.put("v", "女");
+////        map.put("enum", ConditionEnum.AND);
+////        list.add(map);
+//
+//        map = new HashMap<>();
+//        map.put("k", "age");
+//        map.put("v", 30);
+//        map.put("conditionName", "gte");
+//        list.add(map);
+//
+//        map = new HashMap<>();
+//        map.put("k", "age");
+//        map.put("v", 50);
+//        map.put("conditionName", "lte");
+//        list.add(map);
+//
+//        SearchSourceBuilder searchSourceBuilder = this.doRangeQueryLogic(list, null);
+//        request.source(searchSourceBuilder);
+//
+//        log.info("请求报文：{}", request);
+//        SearchResponse response = restClient.search(request, RequestOptions.DEFAULT);
+//        log.info("响应报文：{}", response);
+//
+//        // 获取匹配的数据
+//        SearchHits hits = response.getHits();
+//
+//        log.info("获取总共条数：{}", hits.getTotalHits());
+//        log.info("查询时间：{}", response.getTook());
+//
+//        for (SearchHit hit : hits) {
+//            log.info("打印数据：{}", hit.getSourceAsString());
+//        }
+//
+//
+//    }
+//
+//
+//    public SearchSourceBuilder doTermQueryLogic(SearchSourceBuilder searchSourceBuilder, BoolQueryBuilder boolQueryBuilder, String name, Object value, ConditionEnum conditionEnum, Map<String, SortOrder> sortOrderMap) {
+//        conditionEnum.getBoolQueryBuilder(boolQueryBuilder, QueryBuilders.termQuery(name, value));
+//
+//        // 拼接排序
+//        if (MapUtil.isNotEmpty(sortOrderMap)) {
+//            sortOrderMap.forEach(searchSourceBuilder::sort);
+//        }
+//        searchSourceBuilder = searchSourceBuilder.query(boolQueryBuilder);
+//        return searchSourceBuilder;
+//    }
+//
+//    public SearchSourceBuilder doTermQueryLogic(List<Map<String, Object>> list, Map<String, SortOrder> sortOrderMap) {
+//        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+//        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+//
+//        list.stream().forEach(o -> {
+//            ConditionEnum conditionEnum = (ConditionEnum) o.get("enum");
+//            conditionEnum.getBoolQueryBuilder(boolQueryBuilder, QueryTypeEnum.TERM_QUERY.getQueryBuilder(o.get("k") + "", o.get("v") + ""));
+//            System.out.println();
+//        });
+//
+//
+//        // 拼接排序
+//        if (MapUtil.isNotEmpty(sortOrderMap)) {
+//            sortOrderMap.forEach(searchSourceBuilder::sort);
+//        }
+//        searchSourceBuilder = searchSourceBuilder.query(boolQueryBuilder);
+//        return searchSourceBuilder;
+//    }
+//
+//    public SearchSourceBuilder doMatchQueryLogic(List<Map<String, Object>> list, Map<String, SortOrder> sortOrderMap) {
+//        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+//        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+//
+//        list.stream().forEach(o -> {
+//            ConditionEnum conditionEnum = (ConditionEnum) o.get("enum");
+//            conditionEnum.getBoolQueryBuilder(boolQueryBuilder, QueryTypeEnum.MATCH_QUERY.getQueryBuilder(o.get("k") + "", o.get("v") + ""));
+//            System.out.println();
+//        });
+//
+//
+//        // 拼接排序
+//        if (MapUtil.isNotEmpty(sortOrderMap)) {
+//            sortOrderMap.forEach(searchSourceBuilder::sort);
+//        }
+//        searchSourceBuilder = searchSourceBuilder.query(boolQueryBuilder);
+//        return searchSourceBuilder;
+//    }
+//
+//    public SearchSourceBuilder doRangeQueryLogic(List<Map<String, Object>> list, Map<String, SortOrder> sortOrderMap) {
+//        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+//
+//        RangeQueryBuilder rangeQuery = null;
+//        for (Map<String, Object> o : list) {
+//            if (rangeQuery == null) {
+//                rangeQuery = QueryTypeEnum.RANGE_QUERY.getQueryBuilder(o.get("k") + "", null);
+//            }
+//
+//            Class<RangeQueryBuilder> clazz = RangeQueryBuilder.class;
+//            try {
+//                Method method = clazz.getDeclaredMethod(o.get("conditionName") + "", Object.class);
+//
+//                method.invoke(rangeQuery, o.get("v"));
+//            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//
+//        // 拼接排序
+//        if (MapUtil.isNotEmpty(sortOrderMap)) {
+//            sortOrderMap.forEach(searchSourceBuilder::sort);
+//        }
+//
+//        searchSourceBuilder = searchSourceBuilder.query(rangeQuery);
+//        return searchSourceBuilder;
+//    }
+//
+//
+//    public static void main(String[] args) {
+//        DemoEnum test = DemoEnum.TEST;
+//
+//        DemoEnum.TEST.test();
+//        DemoEnum.TEST.name();
+//
+//        DemoEnum.TEST.test();
+//
+//        QueryInstanceofStrategy strategy = DemoEnum.TEST.test();
+//
+//
+//    }
 }
